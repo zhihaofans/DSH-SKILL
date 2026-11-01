@@ -13,6 +13,6 @@
 - 从 `~/.dsh/skills/` 导出两份技能，各自独立成目录：
   - `agent-development-handbook`：开发流程手册（三件套、git 先问、方案先行、版本号先问）。
   - `swift-app-development`：Swift / SwiftUI 静默失败经验。
-- `README.md`：技能索引、安装方式、新增技能步骤。
+- `README.md`：技能索引；安装教程（用户级 / 项目级 / 软链、验证、更新、卸载）；排障清单；新增技能步骤。
 - `AGENTS.md`：仓库目录约定、校验与安装命令、内容与提交约束。
 - `TODO.md`：未完成事项（校验脚本、mcd 技能归属）。
