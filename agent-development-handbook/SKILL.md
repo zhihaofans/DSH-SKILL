@@ -33,6 +33,8 @@ disable-model-invocation: false
 
 ## 2. Git：先问，再做
 
+**分支命名**：新建仓库默认分支一律 `master`（本机已设 `init.defaultBranch=master`）；不要建议改成 `main`，也不要自作主张改名。
+
 **必须问**：`commit`（含 `--amend`）、`push`、`tag`、`pull`（= fetch + merge）、建 / 删 / 改名 / 切换分支（`switch`、`checkout <branch>`）、`merge`、`rebase`、`cherry-pick`、`reset`、`revert`、`restore` / `checkout` 丢弃改动、`stash drop|clear`、`clean`、`rm`、`mv`、改 remote、`gh pr|release`、加 submodule。
 
 **不必问**：`status`、`diff`、`log`、`show`、`blame`、`rev-parse`、`ls-files` 等只读命令；`fetch` 可以跑，但要说明拉了什么，别拿 `fetch` 当 `pull`。

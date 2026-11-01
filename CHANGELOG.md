@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- `agent-development-handbook` §2 补充分支命名约定：新建仓库默认分支一律 `master`，不建议改成 `main`。
+
 ### Added
 
 - 从 `~/.dsh/skills/` 导出两份技能，各自独立成目录：
