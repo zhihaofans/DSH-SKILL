@@ -7,6 +7,10 @@
 ### Changed
 
 - `agent-development-handbook` §2 补充分支命名约定：新建仓库默认分支一律 `master`，不建议改成 `main`。
+- `agent-development-handbook` 按两天实测 + 两模型评审补齐空白：项目规则与手册冲突时区分「同一动作取更严」和「不同维度问用户」，
+  §2/§5 同步这条口径；TODO 增加「明确不做」「想法（未承诺）」两个可选区（不必非在文件末尾），清理门槛按发版或 30 天；
+  CHANGELOG 小节名可用中文，但全仓库统一、接英文解析工具时必须用英文；§4 约定子代理任务标题带模型名；
+  §6 清单与反模式表补「冲突上报」；`references/templates.md` 同步 TODO 骨架与中文小节名说明。
 
 ### Added
 
