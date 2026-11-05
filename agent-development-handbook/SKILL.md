@@ -44,6 +44,8 @@ disable-model-invocation: false
 
 **随提交一起问**：把本次已审阅的文件 `git add` 进去，不必为每个 `git add <file>` 单独再问；`add -A` / `add .` 会扫入无关改动，仍要单独问，并在征询里列出 stage 了哪些文件。
 
+**第一次 `git add` 前**：仓库根的 `.gitignore` 要先就位，并且**本身要提交**——放 `~/.gitignore` 只影响本机，队友和 CI 都不继承。模板按 GitHub 官方清单 [github/gitignore](https://github.com/github/gitignore) 取：对应语言模板 + `Global/` 里的 macOS、编辑器条目，再补项目特有的（`.env*`、本地路径、凭据）；不要从零自创，也别照抄用不上的规则，GitHub 网页建仓时可以直接勾选模板。漏了先停下来说明：`git rm --cached` 和改写历史都属于本节的写操作，要单独问。常用条目见 `references/templates.md`。
+
 怎么问：
 
 - 一次问一批：贴 `git status --short` 摘要 + 逐条命令 + 拟用提交信息 + 影响（推到哪、会不会动已推送历史）。

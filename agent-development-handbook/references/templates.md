@@ -107,6 +107,45 @@ test/      隔离测试
 
 写「用户看到的变化」，不写「重构了 XxxService」。用不到的类别不要留空标题；Keep a Changelog 的六类是 `Added / Changed / Deprecated / Removed / Fixed / Security`，中文等价写法是 `新增 / 变更 / 弃用 / 移除 / 修复 / 安全`——一旦选了中文就整份文件都用中文，且仓库里有按英文标题解析的工具时不要选中文。
 
+## .gitignore
+
+放仓库根并提交（`~/.gitignore` 只影响本机）。下面摘自 [github/gitignore](https://github.com/github/gitignore) 的常见条目，按项目删改、别整段照抄；完整清单看仓库根目录里的语言模板和 `Global/` 下的系统 / 编辑器模板。
+
+````gitignore
+# 构建产物
+build/
+dist/
+target/
+out/
+node_modules/
+
+# 本地环境
+.env
+.env.*
+!.env.example
+
+# 凭据与私钥（能挡新增文件，挡不住已推送的历史）
+*.pem
+*.p12
+*.keystore
+credentials.*
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# 日志与临时
+*.log
+tmp/
+````
+
+- 只防「以后再提交」：已经进过暂存区或历史的文件归 `git rm --cached` 管，那是 git 写操作，先问用户。
+- 凭据删掉不等于没泄露：推送过的密钥要换，`filter-branch` / `git filter-repo` 会改写历史，更要先问。
+- 生成物目录名随技术栈变（`build/`、`dist/`、`target/`、`.next/`、`Pods/`），照项目实际的补。
+
 ## 短方案
 
 ````text

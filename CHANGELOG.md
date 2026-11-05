@@ -11,6 +11,9 @@
   §2/§5 同步这条口径；TODO 增加「明确不做」「想法（未承诺）」两个可选区（不必非在文件末尾），清理门槛按发版或 30 天；
   CHANGELOG 小节名可用中文，但全仓库统一、接英文解析工具时必须用英文；§4 约定子代理任务标题带模型名；
   §6 清单与反模式表补「冲突上报」；`references/templates.md` 同步 TODO 骨架与中文小节名说明。
+- `agent-development-handbook` §2 增加 `.gitignore` 要求：第一次 `git add` 前就位、文件本身要提交、按
+  [github/gitignore](https://github.com/github/gitignore) 模板取（语言模板 + `Global/`）再补项目特有项；
+  `references/templates.md` 补一份常用条目骨架，并说明 `git rm --cached` / 改写历史仍要先问。
 
 ### Added
 
