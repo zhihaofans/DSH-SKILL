@@ -14,6 +14,10 @@
 - `agent-development-handbook` §2 增加 `.gitignore` 要求：第一次 `git add` 前就位、文件本身要提交、按
   [github/gitignore](https://github.com/github/gitignore) 模板取（语言模板 + `Global/`）再补项目特有项；
   `references/templates.md` 补一份常用条目骨架，并说明 `git rm --cached` / 改写历史仍要先问。
+- `agent-development-handbook` §3 的生命周期补上「开工挪到进行中」：先挪位再动手，做完才删，中途停下退回待办或转阻塞；
+  `references/templates.md` 的 TODO 骨架同步这句。
+- `agent-development-handbook` §3 增加「按阶段顺序推进」：当前阶段还有可做条目就不跨阶段，跨阶段仅限「只剩阻塞」或「用户点名」，
+  并说明理由（实例：第一阶段只做完第一条就跳去第二阶段做排序）。
 
 ### Added
 
