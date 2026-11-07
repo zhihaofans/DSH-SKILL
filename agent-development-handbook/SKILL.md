@@ -78,7 +78,8 @@ disable-model-invocation: false
 - 以下都算发版动作，**每次都先问用户**，上次同意过不代表这次也同意：改 `package.json` / `pyproject.toml` / `Info.plist` 等版本字段；把 CHANGELOG 的 `[Unreleased]` 切成 `## [x.y.z]`；打 tag；`npm publish`、`gh release`、商店 / TestFlight 上传。
 - 打 tag 先问。移动或覆盖已推送的 tag 不做（见 §2），除非用户了解风险后明确要求。
 - 版本变更本身也是一次提交，同样按 §2 先问，别夹在功能提交里。
-- 问的时候给：当前版本、建议版本与理由、要改的文件、要不要同时打 tag / 发布。
+- **版本号和 build 号一起升**：项目同时有整数 build 号时，改版本号的那次提交把 build 号也加一——iOS / macOS 是 `MARKETING_VERSION`（= `CFBundleShortVersionString`）↔ `CURRENT_PROJECT_VERSION`（= `CFBundleVersion`），Android 是 `versionName` ↔ `versionCode`。只升 build 重发（版本号不变，例如 TestFlight 重传）同样要先问；build 号只增不减、不复用，商店会拒掉重复 build。先找全真源（`.xcodeproj` / `.xcconfig` / `Info.plist` / `gradle.properties` / CI 脚本），多 target 时每个 target 都要改；工程已开自动递增（Xcode 的 Manage Version and Build Number、`agvtool`、CI 脚本）就别再手加一次。
+- 问的时候给：当前版本、建议版本与理由、build 号从几到几、要改的文件、要不要同时打 tag / 发布。
 - 版本号格式与升哪一段，以 [语义化版本 2.0.0（中文）](https://semver.org/lang/zh-CN/) 为准：X = 不兼容的公共 API 改动，Y = 向后兼容的新功能，Z = 向后兼容的修复；进位时低位归零（`1.2.3` → `2.0.0`）；预发布写 `1.0.0-rc.1`，`+build` 元数据不参与版本比较。
 - `0.y.z` 是初始开发阶段，公开 API 随时可能变；这不等于版本号可以随便跳——升级理由要对应实际改动，且照样先问。
 - 功能提交不带版本号：做完先留在 `[Unreleased]`，等用户说「发版」再单独一次提交做版本变更。这样能单独回滚，也不会出现 tag 和包内容对不上。

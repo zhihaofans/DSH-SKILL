@@ -18,6 +18,9 @@
   `references/templates.md` 的 TODO 骨架同步这句。
 - `agent-development-handbook` §3 增加「按阶段顺序推进」：当前阶段还有可做条目就不跨阶段，跨阶段仅限「只剩阻塞」或「用户点名」，
   并说明理由（实例：第一阶段只做完第一条就跳去第二阶段做排序）。
+- `agent-development-handbook` §3 增加 build 号同步要求：有整数 build 号的项目，改版本号时同一提交把 build 号加一
+  （iOS / macOS 的 `MARKETING_VERSION` ↔ `CURRENT_PROJECT_VERSION`、Android 的 `versionName` ↔ `versionCode`）；
+  「问的时候给」补上 build 号区间。
 
 ### Added
 
