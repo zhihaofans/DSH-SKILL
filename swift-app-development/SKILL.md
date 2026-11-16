@@ -46,6 +46,7 @@ description: Swift / SwiftUI 应用开发与评审经验，来自 DeviceStatus�
 - 代码里只读 `Bundle.main.object(forInfoDictionaryKey:)`，不写常量；`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 是唯一真相源。
 - 构建号必须唯一且递增（`agvtool new-version -all` 或 CI 注入）；`CFBundleVersion` 只允许数字和点。
 - 版本比较用 `compare(options: .numeric)`：`"1.9.0".compare("1.13.2")` 是字典序，答案是反的。
+- 改 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` 是发版动作，先问用户；测试全绿只是前提，不是授权。
 
 ### 日期
 - 时区一律 `TimeZone(identifier:)`。`TimeZone(abbreviation: "Asia/Shanghai")` 返回 **nil**，赋给 `DateFormatter` 不报错，静默回落设备时区。
@@ -68,6 +69,12 @@ description: Swift / SwiftUI 应用开发与评审经验，来自 DeviceStatus�
 - 平台差异收口成一个类型（`SystemClipboard.isSupported` 用 `#if os(watchOS)`），调用方不散落条件编译。
 - "读不到"要么返回 `Optional`，要么返回**有文档、测试钉住**的哨兵值，展示层必须能区分 `0` 和「未知」。
 - 没有替代 API 时（如 watchOS 7 起 `contextMenu` 整体 deprecated 且无替代重载），判断"这个功能在手表上有没有意义"，没有就不挂。
+- 权限失败要分「没配置」和「设备没有」：Info.plist 缺 usage description 返回 `.misconfigured`（SwiftUtils `2f83675`），平台 / 设备没有返回 `.unavailable`；带着缺键调系统 API 会被直接终止进程，别把两者压成「不支持」。
+
+### 文件与扩展
+- 安全作用域 URL：`startAccessingSecurityScopedResource()` 对普通 URL 返回 `false` 是正常的；访问必须在作用域内、成对 `stop`。跨启动存书签不存 URL；iOS 用 `bookmarkData(options: [])`（`.withSecurityScope` 只有 macOS / Catalyst），`isStale` 要处理。
+- iCloud 文件：读前看 `.isUbiquitousItem` / `.ubiquitousItemDownloadingStatus`，不是 `.current` 就先 `startDownloadingUbiquitousItem` 并轮询（设超时）；未下载的文件不会出现在分享面板。
+- Share Extension：`extensionContext.open` 会被静默忽略；沿 responder chain 调 `UIApplication.open`（非稳定 API，系统升级后真机复测），唤起后稍等再 `completeRequest`。
 
 ### 多平台
 - 单 target 多平台只能产出一个 bundle id → **做不出 companion watch app，只能 watch-only**（Apple 要求 companion id 是 `<父 id>.xxx`）。
@@ -91,7 +98,7 @@ description: Swift / SwiftUI 应用开发与评审经验，来自 DeviceStatus�
 
 ## 完整版在哪
 
-本技能目录下的 `references/experience.md` 是长文（每条的**现象 / 根因 / 做法 / 验证方式** + 43 项上线前检查清单）。
+本技能目录下的 `references/experience.md` 是长文（每条的**现象 / 根因 / 做法 / 验证方式** + 46 项上线前检查清单）。
 只读你需要的章节，别整篇灌进上下文：
 
 | 你在做什么 | 去读这一节（标题可 grep） |
@@ -110,6 +117,14 @@ description: Swift / SwiftUI 应用开发与评审经验，来自 DeviceStatus�
 | 写测试、假绿 | `## 十二、测试：绿了不代表对` |
 | 上架、签名、隐私清单 | `## 十三、发布与上架` |
 | 上线前逐项核对 | `## 十四、上线前检查清单` |
+| 文件 / 目录、书签、iCloud、Share Extension | `## 十五、文件与扩展：书签、iCloud、分享扩展` |
+
+## 官方文档
+
+API 语义拿不准时查官方文档，别靠记忆；规则以本技能的实测为准。
+
+- [Swift 文档](https://developer.apple.com/documentation/swift)
+- [SwiftUI 文档](https://developer.apple.com/documentation/swiftui)
 
 ## 别照搬
 

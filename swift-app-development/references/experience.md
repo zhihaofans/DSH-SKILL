@@ -3,7 +3,8 @@
 > **v1.0** —— 从这台机器上的几个 Swift 工程里沉出来的：
 >
 > - **DeviceStatus**（iOS 26 / watchOS 26 / macOS 26，单 target 多平台，Swift 6 + 默认 MainActor 隔离，SwiftUtils 的宿主工程）
-> - **SwiftUtils**（自研工具库，SPM；DateUtil / DeviceUtil / NetworkUtil / ClipboardUtil）
+> - **SwiftUtils**（自研工具库，SPM；DateUtil / DeviceUtil / NetworkUtil / ClipboardUtil / SecurityScopedAccess 等）
+> - **OhMyFile**（iOS 文件管理；安全作用域书签、iCloud 按需下载、Share Extension）
 > - **zoclip**（macOS 剪贴板历史）
 > - **SafaQrcode**（Safari 扩展 + 二维码）
 > - **KidToys**（iOS/watchOS 儿童向小工具）
@@ -241,7 +242,7 @@ agvtool new-version -all "$(date +%Y%m%d%H%M)"   # 单调递增，无需人肉�
 
 ### 一条纪律
 
-**功能没测通之前不动版本号。** 顺序固定：改代码 → 跑测试 → 全绿 → bump。
+**功能没测通之前不动版本号。** 顺序固定：改代码 → 跑测试 → 全绿 → 问用户 → bump。
 反过来的结果是 changelog 里全是补丁，回看时分不清哪一版是功能、哪一版是在修上一版引入的问题。
 
 ---
@@ -540,6 +541,18 @@ enum SystemClipboard {
 
 规则：凡是"读不到"的情况，要么返回 `Optional`，要么返回一个**有文档、测试钉住**的哨兵值，
 并且展示层必须能区分"0"和"未知"。
+
+### 配置缺失 ≠ 设备不支持
+
+> SwiftUtils `2f83675`：`PermissionUtil` 新增 `.misconfigured`，和 `.unavailable` 分开报。
+
+Info.plist 缺 `NSCameraUsageDescription` 时，系统不会告诉你「配置漏了」——更糟的是，带着缺键去调
+`AVCaptureDevice.requestAccess` 会被直接终止进程。SwiftUtils 在调系统 API 之前先查 `Bundle` 里有没有对应 key：
+
+- 缺了 → `.misconfigured`：改 Info.plist 就能好，别引导用户去设置页；
+- 平台 / 设备没有 → `.unavailable`：别引导去开权限，也别显示一个必然失败的按钮。
+
+把两者压成「不支持」，用户会去修硬件或换设备，永远修不好；日志里也看不出是配置问题。
 
 ### watchOS 的 API 缺口：没有替代品时，只能不挂
 
@@ -990,7 +1003,7 @@ plutil -p build/DeviceStatus.xcarchive/Products/Applications/DeviceStatus.app/In
 □ 所有 target 的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 一致
 □ CFBundleVersion 只含数字和点，且单调递增
 □ 版本比较用 compare(options: .numeric)
-□ 功能测试全绿之后才 bump
+□ 功能测试全绿并经用户同意后才 bump
 
 并发
 □ 回调式 API 的参数标了 @Sendable，或调用点 nonisolated
@@ -1004,6 +1017,11 @@ plutil -p build/DeviceStatus.xcarchive/Products/Applications/DeviceStatus.app/In
 □ 「读不到」有 Optional 或文档化的哨兵值，展示层能区分
 □ watchOS 上的功能逐个确认过（剪贴板、后台、屏幕尺寸）
 □ Info.plist 的平台专属键用了 [sdk=...] 限定
+
+文件与扩展
+□ 安全作用域 URL 都在 start / stop 之间访问，跨启动存书签不存 URL
+□ iCloud 文件读之前确认已下载（或显式触发下载并等待）
+□ Share Extension 唤起主 App 在真机上复测过（extensionContext.open 不可靠）
 
 日期
 □ 时区一律 TimeZone(identifier:)
@@ -1034,6 +1052,73 @@ UI
 □ dSYM 已保留
 □ 三处版本一致（tag / archive / TestFlight）
 ```
+
+---
+
+## 十五、文件与扩展：书签、iCloud、分享扩展
+
+> 来源：OhMyFile（iOS 文件管理：安全作用域书签 / iCloud 按需下载 / Share Extension）；
+> SwiftUtils 的 `SecurityScopedAccess` 是这个模式的最小封装。
+
+### 现象
+
+- 用户选过的目录，App 重启后还在列表里，点进去一片空白或「没有权限」。
+- iCloud 里的文件在列表能看到，打开是空白 / 报错，用户以为文件坏了。
+- 从别的 App 分享到 Share Extension，扩展跑完了，主 App 没被拉起。
+
+### 根因
+
+1. **安全作用域 URL 的授权不跨启动**。`UIDocumentPicker` 返回的 URL 带着临时授权，进程退出后失效；
+   只存 URL 不存书签，重启后必然读不了。
+2. **iOS 没有 `.withSecurityScope` 这个选项**（`NSURLBookmarkCreationWithSecurityScope` 在 iOS / watchOS / tvOS 上
+   unavailable，只有 macOS / Catalyst 有）。iOS 用 `bookmarkData(options: [])` 存（OhMyFile 实测重启后仍能读），解析后仍要
+   `startAccessingSecurityScopedResource()` 才能 IO；`isStale == true` 说明书签过期，要重新生成。
+3. **`startAccessingSecurityScopedResource()` 对普通 URL 返回 `false` 是正常的**，不是失败；
+   把它当错误，普通文件也会走异常分支。
+4. **iCloud 文件默认是占位符**。`.ubiquitousItemDownloadingStatus != .current` 时直接读会失败；
+   分享面板也不会为未下载的 iCloud 文件列出第三方扩展。
+5. **`extensionContext.open` 在 Share Extension 里会被静默忽略**（OhMyFile 真机验证），没有回调、没有报错。
+
+### 做法
+
+**安全作用域**（SwiftUtils `SecurityScopedAccess` 的形态）：
+
+```swift
+func withAccess<T>(to url: URL, _ body: () throws -> T) rethrows -> T {
+    let accessing = url.startAccessingSecurityScopedResource()
+    defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+    return try body()
+}
+```
+
+- 存书签用 `bookmarkData(options: [], ...)`；解析用 `URL(resolvingBookmarkData:options: [.withoutUI], ...)`；
+  `isStale` 为 true 就重新生成并覆盖。
+- 每次打开目录 / 文件时再进作用域，不要长期持有 `startAccessing` 的结果。
+- 权限失效要把「重新授权」做成可见入口（OhMyFile 是整行变暗 + 重新授权 / 移除），不要只给一句「读取失败」。
+
+**iCloud**（OhMyFile `CloudFileDownloader` 的形态）：
+
+```swift
+let values = try url.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey])
+guard values.isUbiquitousItem == true else { return }
+if values.ubiquitousItemDownloadingStatus == .current { return }
+try FileManager.default.startDownloadingUbiquitousItem(at: url)
+// 轮询到 .current；设超时（OhMyFile 是 30s）
+```
+
+**Share Extension**（OhMyFile `ShareViewController`）：
+
+- `extensionContext.open` 不可靠；优先沿 responder chain 找 `UIApplication.open`。这是非公开的兼容做法，
+  系统升级后要真机复测。
+- 唤起后给系统一点时间（OhMyFile 用 0.6s）再 `completeRequest`，否则唤起会被取消。
+- 兜底：成功提示 + 主 App 启动时检查待处理任务。
+
+### 验证方式
+
+- 选目录 → 杀掉 App → 重启 → 仍能读到文件（真机，不是模拟器）。
+- 飞行模式下打开 iCloud 文件：有明确提示，不是空白页。
+- 用「文件」App 分享一个未下载的 iCloud 文件：确认它不会出现在分享面板（系统行为，不是 App 坏了）。
+- Share Extension 真机走一遍：扩展完成、主 App 被拉起；系统升级后再走一遍。
 
 ---
 
