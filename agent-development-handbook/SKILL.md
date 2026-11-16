@@ -6,12 +6,23 @@ disable-model-invocation: false
 
 # AGENT 开发手册
 
-五条硬规则：**三件套**、**git 先问**、**TODO / CHANGELOG 分工**、**方案先行**、**版本号先问**；复杂项目再加一条——**学会指挥**（写 → 审 → 定，见 §4）。
+六条硬规则：**三件套**、**git 先问**、**TODO / CHANGELOG 分工**、**方案先行**、**版本号先问**、**说短话**；复杂项目再加一条——**学会指挥**（写 → 审 → 定，见 §4）。
 它们服务同一个目标：下一个会话只读仓库，就知道现在做到哪、为什么这么做、下一步是什么。
 
 > 项目自己的 `AGENTS.md` 在命令、目录、架构、代码风格上优先于本手册；但它不能用来绕开用户定的硬约束（git 写操作先问、改版本号先问、不确定先问）。
 > 项目规则**只能加严，不能放松**：项目把 `fetch` 也列进「先问」清单，就照项目办；项目写「版本号可以自己升」，按本手册办，仍然要问。
 > 两边打架时先分两种：**说的是同一件事**（谁先问、能不能自己升版）→ 取更严的那条，并把差异当场说给用户听；**说的不是同一件事**（项目要求每条 CHANGELOG 都确认，手册只管版本段）→ 停下来问用户。不要默默挑一条执行。
+
+## 0. 说短话
+
+先给结论，后给证据；默认一屏内看完。
+
+- 该查的查完再开口，但只报结论和证据，不直播推理过程。
+- 能并行核实的就一次查完，不要挤牙膏式来回试探；结论要能落到文件、命令或测试上。
+- 不复述需求，不把「我检查了 A、B、C」写成流水账。
+- 长内容（清单、对照、实测记录）进 `references/` 或代码块，回复只留结论和关键证据。
+- 简短不等于省略：**没做什么、验证有没有跑、待用户决定**这三样必须写。
+- 该问的照问（§5），但一次问清；不要边想边问，也不要用「我觉得」凑段落。
 
 ## 开工前 60 秒
 
@@ -71,11 +82,13 @@ disable-model-invocation: false
 - 超过一屏就分「进行中 / 待办 / 阻塞」；阻塞项标清等谁、等什么，别挂在「进行中」。「明确不做」「想法（未承诺）」不混进待办，放对应里程碑子节底部或文件末尾。
 - 发现的、但这次不做的事也要落进 TODO，别只留在对话里。
 - CHANGELOG 用 Keep a Changelog：`## [Unreleased]` + 六个小节（`Added / Changed / Deprecated / Removed / Fixed / Security`），写用户能感知的结果。小节名可以用中文（`新增 / 变更 / 弃用 / 移除 / 修复 / 安全`），但**全仓库统一一种写法**，同一个文件里不要中英混排；仓库接了 `conventional-changelog`、`standard-version`、`release-please` 这类按英文标题解析的工具时，标题必须用英文。
+- **版本段边界**：新条目只写进 `## [Unreleased]`。动手前先找到这个标题，只改它到下一个 `## ` 之间的内容；`[Unreleased]` 下没有合适的 `###` 小节就自己建。**不要按「文件里第一个 `### 新增`」定位**——发版之后第一个小节属于刚发布的版本，这是最常见的串段事故。
+- **已发布段冻结**：`## [x.y.z]` 是 tag 对应的历史，不追加新条目，只做事实勘误；要改就在提交信息里说明。
 
 ### 版本号：改之前先问
 
 - **做完一步 ≠ 该发版。** 不要因为「这个功能做完了」就把 `0.0.2` 改成 `0.0.3`，也不要每轮任务都递一个版本号。
-- 以下都算发版动作，**每次都先问用户**，上次同意过不代表这次也同意：改 `package.json` / `pyproject.toml` / `Info.plist` 等版本字段；把 CHANGELOG 的 `[Unreleased]` 切成 `## [x.y.z]`；打 tag；`npm publish`、`gh release`、商店 / TestFlight 上传。
+- 以下都算发版动作，**每次都先问用户**，上次同意过不代表这次也同意：改 `package.json` / `pyproject.toml` / `Info.plist` 等版本字段；把 CHANGELOG 的 `[Unreleased]` 归档成 `## [x.y.z] - 日期`（顶部仍保留空的 `## [Unreleased]`）；打 tag；`npm publish`、`gh release`、商店 / TestFlight 上传。
 - 打 tag 先问。移动或覆盖已推送的 tag 不做（见 §2），除非用户了解风险后明确要求。
 - 版本变更本身也是一次提交，同样按 §2 先问，别夹在功能提交里。
 - **版本号和 build 号一起升**：项目同时有整数 build 号时，改版本号的那次提交把 build 号也加一——iOS / macOS 是 `MARKETING_VERSION`（= `CFBundleShortVersionString`）↔ `CURRENT_PROJECT_VERSION`（= `CFBundleVersion`），Android 是 `versionName` ↔ `versionCode`。只升 build 重发（版本号不变，例如 TestFlight 重传）同样要先问；build 号只增不减、不复用，商店会拒掉重复 build。先找全真源（`.xcodeproj` / `.xcconfig` / `Info.plist` / `gradle.properties` / CI 脚本），多 target 时每个 target 都要改；工程已开自动递增（Xcode 的 Manage Version and Build Number、`agvtool`、CI 脚本）就别再手加一次。
@@ -83,6 +96,7 @@ disable-model-invocation: false
 - 版本号格式与升哪一段，以 [语义化版本 2.0.0（中文）](https://semver.org/lang/zh-CN/) 为准：X = 不兼容的公共 API 改动，Y = 向后兼容的新功能，Z = 向后兼容的修复；进位时低位归零（`1.2.3` → `2.0.0`）；预发布写 `1.0.0-rc.1`，`+build` 元数据不参与版本比较。
 - `0.y.z` 是初始开发阶段，公开 API 随时可能变；这不等于版本号可以随便跳——升级理由要对应实际改动，且照样先问。
 - 功能提交不带版本号：做完先留在 `[Unreleased]`，等用户说「发版」再单独一次提交做版本变更。这样能单独回滚，也不会出现 tag 和包内容对不上。
+- **发版那一次提交的顺序**：① 顶部留空的 `## [Unreleased]`；② 原内容整体下移，前面写 `## [x.y.z] - 日期`；③ `git diff CHANGELOG.md` 确认没有条目落进旧版本段；④ 版本字段、CHANGELOG、文档里的版本引用一起改完再提交。
 - 改版本时同步检查 README、安装命令、文档里引用的版本号和 tag，不要只改 `package.json`。
 - 往 `[Unreleased]` 加条目随时可以，那不涉及版本号；出现具体 `## [x.y.z]` 才需要问。
 
@@ -157,7 +171,7 @@ disable-model-invocation: false
 ## 6. 收尾清单
 
 - [ ] 做完的已从 TODO 移走，新发现的已记进 TODO
-- [ ] CHANGELOG 有对应用户视角条目（纯内部改动可没有）
+- [ ] CHANGELOG 有对应用户视角条目，且落在 `[Unreleased]` 段内（`git diff` 里新增 `- ` 行的最近上方 `## ` 是 `[Unreleased]`；纯内部改动可没有）
 - [ ] 验证真跑过（命令 + 结果）；没跑的在回复里说明
 - [ ] git 操作都征得过同意，没有未说明的残留改动
 - [ ] 没有擅自改版本号、切版本段或打 tag（要发版先问过）
@@ -172,6 +186,7 @@ disable-model-invocation: false
 | 一个 commit 混三件事 | 出问题无法单独回滚 |
 | TODO 完成了打勾留着 | 清单越来越长，没人再读 |
 | CHANGELOG 抄 commit message | 用户视角丢失，等于没写 |
+| 新条目续在已发布版本的 `###` 列表里 | 已发布段被改写，tag 里的内容和 CHANGELOG 对不上（OhMyFile 0.0.4、MMCL 0.0.4 都这样） |
 | 「顺手」push / 打 tag | 不可撤回的动作没人批准过 |
 | 改一步就升版本号 | 版本失去含义，tag、包、CHANGELOG 对不上 |
 | 猜需求然后解释「我以为」 | 返工，还消耗信任 |

@@ -21,6 +21,8 @@
 - `agent-development-handbook` §3 增加 build 号同步要求：有整数 build 号的项目，改版本号时同一提交把 build 号加一
   （iOS / macOS 的 `MARKETING_VERSION` ↔ `CURRENT_PROJECT_VERSION`、Android 的 `versionName` ↔ `versionCode`）；
   「问的时候给」补上 build 号区间。
+- `agent-development-handbook` 收紧 CHANGELOG 分段：新条目只进 `## [Unreleased]`，按 `## [Unreleased]` 到下一个 `## ` 的区间定位（不按「第一个 `###`」找）；发版时顶部保留空的 `[Unreleased]`、已发布段冻结；§6 清单与反模式表补检查项，`references/templates.md` 写明发版后形态。
+- `agent-development-handbook` 新增 §0「说短话」：先结论后证据、默认一屏内、不直播推理过程，长内容进 `references/`；「五条硬规则」相应改为六条。
 
 ### Added
 
