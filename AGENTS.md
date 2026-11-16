@@ -36,6 +36,7 @@ ln -s "$PWD/<skill-name>" ~/.dsh/skills/<skill-name>
 - `SKILL.md` 的 `name` 必须等于目录名；`description` 决定何时载入，改之前先说明影响。
 - 长内容进 `references/`，`SKILL.md` 保持一屏内能读完的规则密度。
 - 新增技能：建目录 → 写 SKILL.md → 更新 README 索引 → 记 CHANGELOG `[Unreleased]`。
+- CHANGELOG 条目开头用反引号写技能名，如 `agent-development-handbook`；仓库级改动（README / AGENTS / TODO）不写前缀。
 
 ## 提交
 
